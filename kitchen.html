@@ -138,6 +138,7 @@
   <header>
     <h1>🍳 주방 키오스크 <small>Kitchen</small></h1>
     <span class="pending-count" id="pendingCount">대기 0</span>
+    <a class="reset-btn" href="./sales.html" target="_blank" style="text-decoration:none">📊 매출</a>
     <button class="reset-btn" id="resetBtn">전체 초기화</button>
   </header>
 
@@ -179,12 +180,19 @@
     const order = KioskStore.loadOrders().find(o => o._key === key);
     if (!order) return;
     order.items[itemIndex].done = true;
-    // if everything in this order is now done, remove the whole ticket
-    if (order.items.every(it => it.done)) KioskStore.removeOrder(key);
-    else KioskStore.setItems(key, order.items);
+    // if everything in this order is now done, archive it to sales and remove
+    if (order.items.every(it => it.done)) {
+      KioskStore.archiveOrder(order);
+      KioskStore.removeOrder(key);
+    } else {
+      KioskStore.setItems(key, order.items);
+    }
   }
 
   function completeOrder(key) {
+    const order = KioskStore.loadOrders().find(o => o._key === key);
+    if (!order) return;
+    KioskStore.archiveOrder(order);
     KioskStore.removeOrder(key);
   }
 

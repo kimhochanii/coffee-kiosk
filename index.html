@@ -630,8 +630,9 @@
       orderType,
       table: orderType === "Dine In" ? tableNumber : null,
       time: Date.now(),
+      total: total,
       items: [...cart.values()].map(({ item, qty, temp }) => ({
-        name: item.name, emoji: item.emoji, temp, qty, done: false
+        name: item.name, emoji: item.emoji, temp, qty, price: item.price, done: false
       }))
     };
 

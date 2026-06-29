@@ -60,8 +60,37 @@
   function removeOrder(key) { db.ref("orders/" + key).remove(); }
   function clearAll() { ordersRef.remove(); }
 
+  // ----- Sales archive (completed orders kept for the report) -----
+  const salesRef = db.ref("sales");
+  let salesCache = [];
+  const salesSubs = [];
+  let salesAttached = false;
+
+  function ensureSales() {
+    if (salesAttached) return;
+    salesAttached = true;
+    salesRef.on("value", (snap) => {
+      const val = snap.val() || {};
+      salesCache = Object.entries(val).map(([k, v]) => ({ _key: k, ...v }));
+      salesSubs.forEach((cb) => { try { cb(); } catch (e) {} });
+    });
+  }
+
+  // Move a finished order into the sales archive (with a completion time).
+  function archiveOrder(order) {
+    const rec = Object.assign({}, order);
+    delete rec._key;
+    rec.completedAt = Date.now();
+    salesRef.push(rec);
+  }
+
+  function subscribeSales(cb) { ensureSales(); salesSubs.push(cb); }
+  function loadSales() { return salesCache; }
+  function clearSales() { salesRef.remove(); }
+
   window.KioskStore = {
     loadOrders, addOrder, subscribe,
-    setItems, removeOrder, clearAll
+    setItems, removeOrder, clearAll,
+    archiveOrder, subscribeSales, loadSales, clearSales
   };
 })();
