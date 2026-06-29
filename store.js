@@ -36,16 +36,22 @@
   // Current snapshot of orders (kept live by the listener above).
   function loadOrders() { return cache; }
 
-  // Per-device order number (one ordering iPad). Display only.
-  function nextOrderNumber() {
-    let n = parseInt(localStorage.getItem("coffeeKioskCounter") || "0", 10) + 1;
-    if (n > 999) n = 1;
-    localStorage.setItem("coffeeKioskCounter", String(n));
-    return n;
+  // Customer side: assign a GLOBAL order number via a Firebase transaction
+  // (so two order kiosks never produce duplicate numbers), then push the
+  // order. Returns a Promise that resolves to the assigned number.
+  function addOrder(order) {
+    const counterRef = db.ref("counter");
+    return counterRef.transaction((cur) => {
+      let n = (cur || 0) + 1;
+      if (n > 999) n = 1; // wrap around
+      return n;
+    }).then((res) => {
+      const num = res.snapshot.val();
+      order.number = num;
+      ordersRef.push(order);
+      return num;
+    });
   }
-
-  // Customer side: push a new paid order to the cloud.
-  function addOrder(order) { ordersRef.push(order); }
 
   // Kitchen side: update the items of an order (e.g. mark one done).
   function setItems(key, items) { db.ref("orders/" + key + "/items").set(items); }
@@ -55,7 +61,7 @@
   function clearAll() { ordersRef.remove(); }
 
   window.KioskStore = {
-    loadOrders, addOrder, subscribe, nextOrderNumber,
+    loadOrders, addOrder, subscribe,
     setItems, removeOrder, clearAll
   };
 })();

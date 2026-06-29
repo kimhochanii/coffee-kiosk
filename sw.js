@@ -1,11 +1,12 @@
 // Service worker: cache the app so it runs offline like a native app.
-const CACHE = "coffee-kiosk-v2";
+const CACHE = "coffee-kiosk-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./kitchen.html",
   "./store.js",
   "./manifest.json",
+  "./kitchen-manifest.json",
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png"

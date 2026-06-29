@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kitchen Display</title>
+<title>주방 키오스크</title>
 
 <!-- installable like the kiosk -->
+<link rel="manifest" href="./kitchen-manifest.json">
 <meta name="theme-color" content="#2b2018">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Kitchen">
+<meta name="apple-mobile-web-app-title" content="주방 키오스크">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
   :root {
@@ -135,7 +136,7 @@
 </head>
 <body>
   <header>
-    <h1>🍳 주방 화면 <small>Kitchen Display</small></h1>
+    <h1>🍳 주방 키오스크 <small>Kitchen</small></h1>
     <span class="pending-count" id="pendingCount">대기 0</span>
     <button class="reset-btn" id="resetBtn">전체 초기화</button>
   </header>
@@ -211,7 +212,9 @@
     board.innerHTML = "";
     for (const order of pending) {
       const icon = order.orderType === "Dine In" ? "🍽️" : "🥤";
-      const typeKo = order.orderType === "Dine In" ? "매장" : "포장";
+      const typeKo = order.orderType === "Dine In"
+        ? (order.table ? "매장 · " + order.table + "번" : "매장")
+        : "포장";
       const fresh = (Date.now() - order.time) < 15000 ? "fresh" : "";
 
       const card = document.createElement("div");
