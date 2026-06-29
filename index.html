@@ -318,12 +318,12 @@
     <div class="order-choices">
       <div class="choice-card" data-type="Dine In">
         <div class="ico">🍽️</div>
-        <div class="t">Dine In</div>
+        <div class="t">매장 식사</div>
         <div class="d">매장에서 먹기</div>
       </div>
       <div class="choice-card" data-type="Take Out">
-        <div class="ico">🥤</div>
-        <div class="t">Take Out</div>
+        <div class="ico">🛍️</div>
+        <div class="t">포장</div>
         <div class="d">포장하기</div>
       </div>
     </div>
@@ -359,16 +359,16 @@
       <main id="menu"></main>
 
       <aside class="cart">
-        <h2>🛒 Your Order</h2>
+        <h2>🛒 주문 내역</h2>
         <div class="order-mode" id="cartOrderMode"></div>
         <div id="cartLines"></div>
         <div class="totals">
-          <span>Total</span>
-          <span id="cartTotal">0 won</span>
+          <span>합계</span>
+          <span id="cartTotal">0원</span>
         </div>
         <div class="actions">
-          <button class="btn btn-ghost" id="clearBtn">Clear</button>
-          <button class="btn btn-primary" id="checkoutBtn" disabled>Pay by Card</button>
+          <button class="btn btn-ghost" id="clearBtn">비우기</button>
+          <button class="btn btn-primary" id="checkoutBtn" disabled>카드 결제</button>
         </div>
       </aside>
     </div>
@@ -401,7 +401,7 @@
   let tableInput = "";                  // keypad buffer
   const cart = new Map();               // key -> { item, qty, temp }
 
-  const won = n => n.toLocaleString("en-US") + " won";
+  const won = n => n.toLocaleString("ko-KR") + "원";
   const lineKey = (id, temp) => temp ? `${id}-${temp}` : `${id}`;
 
   // Human label for the chosen order type (with table number for dine-in)
@@ -476,7 +476,7 @@
     root.innerHTML = "";
     const items = KioskStore.loadMenu();
     if (!items.length) {
-      root.innerHTML = '<p style="color:var(--muted);padding:20px">메뉴를 불러오는 중…</p>';
+      root.innerHTML = '<p style="color:var(--muted);padding:20px">🍶 준비된 메뉴가 없습니다. 주방 키오스크의 “메뉴 관리”에서 추가해 주세요.</p>';
       return;
     }
     // group by category in first-seen order (no duplicate headers)
@@ -520,13 +520,13 @@
   function openTempModal(item) {
     modal.innerHTML = `
       <h3>${item.emoji} ${item.name}</h3>
-      <p style="margin-top:-6px;color:var(--muted);font-size:13px">Choose temperature</p>
+      <p style="margin-top:-6px;color:var(--muted);font-size:13px">온도를 선택하세요</p>
       <div class="temp-choices">
-        <button class="temp-btn hot" id="hotBtn"><span class="ic">🔥</span>HOT</button>
-        <button class="temp-btn ice" id="iceBtn"><span class="ic">🧊</span>ICED</button>
+        <button class="temp-btn hot" id="hotBtn"><span class="ic">🔥</span>따뜻하게</button>
+        <button class="temp-btn ice" id="iceBtn"><span class="ic">🧊</span>차갑게</button>
       </div>
       <div class="actions">
-        <button class="btn btn-ghost" id="tempCancel">Cancel</button>
+        <button class="btn btn-ghost" id="tempCancel">취소</button>
       </div>`;
     showModal();
     document.getElementById("hotBtn").onclick = () => { addToCart(item, "HOT"); closeModal(); };
@@ -558,7 +558,7 @@
     const box = document.getElementById("cartLines");
     box.innerHTML = "";
     if (cart.size === 0) {
-      box.innerHTML = '<div class="cart-empty">Your cart is empty</div>';
+      box.innerHTML = '<div class="cart-empty">담은 메뉴가 없습니다</div>';
     } else {
       for (const [key, { item, qty, temp }] of cart.entries()) {
         const row = document.createElement("div");
@@ -598,7 +598,7 @@
   function openPayment() {
     const total = cartTotal();
     modal.innerHTML = `
-      <h3>💳 Card Payment</h3>
+      <h3>💳 카드 결제</h3>
       <div class="pay-summary">
         <div class="amt">${won(total)}</div>
         <div class="mode">${modeLabel()}</div>
@@ -608,11 +608,11 @@
         <div class="num">**** **** **** 1234</div>
       </div>
       <p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 16px">
-        Please insert or tap your card.
+        카드를 넣거나 대주세요.
       </p>
       <div class="actions">
-        <button class="btn btn-ghost" id="payCancel">Cancel</button>
-        <button class="btn btn-primary" id="payConfirm">Pay ${won(total)}</button>
+        <button class="btn btn-ghost" id="payCancel">취소</button>
+        <button class="btn btn-primary" id="payConfirm">${won(total)} 결제</button>
       </div>`;
     showModal();
     document.getElementById("payCancel").onclick = closeModal;
@@ -623,7 +623,7 @@
     modal.innerHTML = `
       <div class="processing">
         <div class="spin"></div>
-        Processing card payment…
+        카드 결제 처리 중…
       </div>`;
     setTimeout(() => showReceipt(total), 1200);
   }
@@ -650,19 +650,19 @@
     }
     modal.innerHTML = `
       <div class="receipt">
-        <h3 style="text-align:center;margin-top:0">☕ RECEIPT</h3>
+        <h3 style="text-align:center;margin-top:0">🍻 영수증</h3>
         <div class="r-line"><span>주문번호</span><span id="rcptNo">…</span></div>
         <div class="r-line"><span>주문 유형</span><span>${modeLabel()}</span></div>
         <hr>
         ${lines}
         <hr>
-        <div class="r-line r-total"><span>TOTAL</span><span>${won(total)}</span></div>
-        <div class="r-line"><span>Payment</span><span>Card · Approved</span></div>
+        <div class="r-line r-total"><span>합계</span><span>${won(total)}</span></div>
+        <div class="r-line"><span>결제</span><span>카드 · 승인</span></div>
         <hr>
-        <div class="thanks">Thank you! Enjoy your order :)</div>
+        <div class="thanks">감사합니다! 맛있게 드세요 :)</div>
       </div>
       <div class="actions" style="margin-top:18px">
-        <button class="btn btn-primary" id="doneBtn">New Order</button>
+        <button class="btn btn-primary" id="doneBtn">새 주문</button>
       </div>`;
 
     // Fill in the cloud-assigned order number when it returns.
