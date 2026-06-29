@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>주방 키오스크</title>
+<title>컴퓨터학부 주막 - 주방 키오스크</title>
 
 <!-- installable like the kiosk -->
 <link rel="manifest" href="./kitchen-manifest.json">
 <meta name="theme-color" content="#2b2018">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="주방 키오스크">
+<meta name="apple-mobile-web-app-title" content="주막 주방">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
   :root {
@@ -136,8 +136,9 @@
 </head>
 <body>
   <header>
-    <h1>🍳 주방 키오스크 <small>Kitchen</small></h1>
+    <h1>🍳 컴퓨터학부 주막 <small>주방</small></h1>
     <span class="pending-count" id="pendingCount">대기 0</span>
+    <a class="reset-btn" href="./menu-admin.html" target="_blank" style="text-decoration:none">🍽️ 메뉴 관리</a>
     <a class="reset-btn" href="./sales.html" target="_blank" style="text-decoration:none">📊 매출</a>
     <button class="reset-btn" id="resetBtn">전체 초기화</button>
   </header>

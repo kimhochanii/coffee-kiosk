@@ -88,9 +88,29 @@
   function loadSales() { return salesCache; }
   function clearSales() { salesRef.remove(); }
 
+  // ----- Menu (shared; editable from the kitchen, shown on the order kiosk) -----
+  const menuRef = db.ref("menu");
+  let menuCache = [];
+  const menuSubs = [];
+
+  menuRef.on("value", (snap) => {
+    const val = snap.val() || {};
+    menuCache = Object.entries(val)
+      .map(([k, v]) => ({ _key: k, ...v }))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    menuSubs.forEach((cb) => { try { cb(); } catch (e) {} });
+  });
+
+  function subscribeMenu(cb) { menuSubs.push(cb); }
+  function loadMenu() { return menuCache; }
+  function addMenuItem(item) { return menuRef.push(item); }
+  function updateMenuItem(key, patch) { return menuRef.child(key).update(patch); }
+  function removeMenuItem(key) { return menuRef.child(key).remove(); }
+
   window.KioskStore = {
     loadOrders, addOrder, subscribe,
     setItems, removeOrder, clearAll,
-    archiveOrder, subscribeSales, loadSales, clearSales
+    archiveOrder, subscribeSales, loadSales, clearSales,
+    subscribeMenu, loadMenu, addMenuItem, updateMenuItem, removeMenuItem
   };
 })();

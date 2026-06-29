@@ -1,7 +1,7 @@
 {
-  "name": "주방 키오스크",
-  "short_name": "주방 키오스크",
-  "description": "커피숍 주방 화면",
+  "name": "컴퓨터학부 주막 - 주방",
+  "short_name": "주막 주방",
+  "description": "컴퓨터학부 주막 주방 화면",
   "start_url": "./kitchen.html",
   "scope": "./",
   "display": "standalone",

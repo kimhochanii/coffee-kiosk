@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>컴퓨터학부 주막 - 메뉴 관리</title>
+<meta name="theme-color" content="#6f4e37">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="메뉴 관리">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<style>
+  :root {
+    --bg:#f4ece2; --panel:#fffaf3; --ink:#3b2a1d; --muted:#9c8772;
+    --accent:#6f4e37; --accent-dark:#543a28; --line:#e7dccd;
+    --good:#2e7d52; --danger:#b23b3b; --shadow:0 8px 24px rgba(80,55,35,.12);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Apple SD Gothic Neo","Segoe UI",system-ui,sans-serif;
+         background:var(--bg); color:var(--ink); min-height:100vh; }
+  header { background:var(--accent); color:#fff; padding:16px 22px;
+           display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:20px; }
+  .add-btn { background:#fff; color:var(--accent); border:none; border-radius:22px;
+             padding:9px 18px; font-weight:700; cursor:pointer; font-size:14px; }
+  .wrap { max-width:980px; margin:20px auto; padding:0 16px; }
+  .hint { color:var(--muted); font-size:13px; margin:0 0 14px; }
+
+  .row {
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--shadow); padding:14px; margin-bottom:12px;
+    display:grid; grid-template-columns:64px 1.4fr 1fr 0.9fr auto auto; gap:10px; align-items:center;
+  }
+  .row.soldout { opacity:.6; }
+  @media (max-width:760px){ .row{ grid-template-columns:1fr 1fr; } }
+  .row label { font-size:11px; color:var(--muted); display:block; margin-bottom:3px; }
+  .row input[type=text], .row input[type=number] {
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:10px;
+    font-size:15px; background:#fff; color:var(--ink);
+  }
+  .row .emoji-in { text-align:center; font-size:20px; }
+  .checks { display:flex; gap:14px; align-items:center; }
+  .checks label { font-size:13px; color:var(--ink); display:flex; align-items:center; gap:5px; margin:0; }
+  .checks input { width:18px; height:18px; }
+  .row-actions { display:flex; gap:8px; }
+  .btn { border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; font-size:13px; }
+  .btn-save { background:var(--accent); color:#fff; }
+  .btn-save:hover { background:var(--accent-dark); }
+  .btn-del { background:#fff; color:var(--danger); border:1px solid var(--line); }
+  .btn-del:hover { background:#fbeaea; }
+  .saved { color:var(--good); font-size:12px; font-weight:700; opacity:0; transition:opacity .2s; }
+  .saved.show { opacity:1; }
+  .empty { color:var(--muted); text-align:center; padding:50px 0; }
+  .backlink { color:#fff; text-decoration:none; opacity:.85; font-size:13px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🍽️ 컴퓨터학부 주막 · 메뉴 관리</h1>
+    <div style="display:flex;gap:12px;align-items:center">
+      <a class="backlink" href="./kitchen.html">← 주방으로</a>
+      <button class="add-btn" id="addBtn">＋ 새 메뉴 추가</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <p class="hint">메뉴를 수정하고 <b>저장</b>을 누르면 주문 키오스크에 바로 반영됩니다. ·
+      <b>HOT/ICED</b>: 음료처럼 온도 선택을 받을 항목 · <b>품절</b>: 주문 화면에서 품절 표시(주문 불가) ·
+      <b>순서</b>: 숫자가 작을수록 먼저 표시.</p>
+    <div id="list"></div>
+    <div class="empty" id="empty" style="display:none">메뉴가 없습니다. 오른쪽 위 “＋ 새 메뉴 추가”로 만들어 보세요.</div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="./store.js"></script>
+<script>
+  const listEl = document.getElementById("list");
+  let renderedKeys = "";
+
+  document.getElementById("addBtn").onclick = () => {
+    const items = KioskStore.loadMenu();
+    const maxOrder = items.reduce((m, it) => Math.max(m, it.order || 0), 0);
+    KioskStore.addMenuItem({
+      name: "새 메뉴", price: 0, category: "기타",
+      emoji: "🍶", hasTemp: false, soldOut: false, order: maxOrder + 1
+    });
+  };
+
+  function makeRow(it) {
+    const row = document.createElement("div");
+    row.className = "row" + (it.soldOut ? " soldout" : "");
+    row.innerHTML = `
+      <div><label>아이콘</label><input type="text" class="emoji-in" data-f="emoji" value="${it.emoji || ""}" maxlength="2"></div>
+      <div><label>이름</label><input type="text" data-f="name" value="${(it.name || "").replace(/"/g,'&quot;')}"></div>
+      <div><label>분류</label><input type="text" data-f="category" value="${(it.category || "").replace(/"/g,'&quot;')}"></div>
+      <div><label>가격(원)</label><input type="number" data-f="price" value="${it.price || 0}" min="0" step="100"></div>
+      <div>
+        <div class="checks">
+          <label><input type="checkbox" data-f="hasTemp" ${it.hasTemp ? "checked" : ""}>HOT/ICED</label>
+          <label><input type="checkbox" data-f="soldOut" ${it.soldOut ? "checked" : ""}>품절</label>
+        </div>
+        <div style="margin-top:6px"><label>순서</label><input type="number" data-f="order" value="${it.order || 0}" style="width:80px"></div>
+      </div>
+      <div class="row-actions" style="flex-direction:column;align-items:stretch">
+        <button class="btn btn-save">저장</button>
+        <button class="btn btn-del">삭제</button>
+        <span class="saved">✓ 저장됨</span>
+      </div>`;
+
+    row.querySelector(".btn-save").onclick = () => {
+      const get = f => row.querySelector(`[data-f="${f}"]`);
+      const patch = {
+        emoji: get("emoji").value.trim(),
+        name: get("name").value.trim() || "이름 없음",
+        category: get("category").value.trim() || "기타",
+        price: parseInt(get("price").value, 10) || 0,
+        hasTemp: get("hasTemp").checked,
+        soldOut: get("soldOut").checked,
+        order: parseInt(get("order").value, 10) || 0
+      };
+      KioskStore.updateMenuItem(it._key, patch).then(() => {
+        const s = row.querySelector(".saved");
+        s.classList.add("show");
+        setTimeout(() => s.classList.remove("show"), 1200);
+        row.classList.toggle("soldout", patch.soldOut);
+      });
+    };
+    row.querySelector(".btn-del").onclick = () => {
+      if (confirm(`'${it.name}' 메뉴를 삭제할까요?`)) KioskStore.removeMenuItem(it._key);
+    };
+    return row;
+  }
+
+  function render() {
+    const items = KioskStore.loadMenu();
+    const keys = items.map(i => i._key).join(",");
+    // Only rebuild the DOM when items are added/removed, so in-progress
+    // edits in other rows are not wiped by a save's own update event.
+    if (keys === renderedKeys) return;
+    renderedKeys = keys;
+
+    listEl.innerHTML = "";
+    items.forEach(it => listEl.appendChild(makeRow(it)));
+    document.getElementById("empty").style.display = items.length ? "none" : "block";
+  }
+
+  KioskStore.subscribeMenu(render);
+  render();
+</script>
+</body>
+</html>
